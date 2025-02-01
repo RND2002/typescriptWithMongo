@@ -1,15 +1,17 @@
 import express from "express";
 import dotenv from "dotenv";
+
 import connectDB from "./db"; 
 import expressConfig from "./config/express.config";
-dotenv.config(); 
 
+dotenv.config(); 
 const app = express();
 const port = 3000;
 
-//const dbConnectionString = process.env.MONGO_LOCALURL;
+const dbConnectionString = process.env.MONGO_LOCALURL;
+//console.log("hgjdkfhgiduthjgitrjhjtrhitrj587654",dbConnectionString)
 
-const dbConnectionString="mongodb://localhost:27017/75waydb"
+//const dbConnectionString="mongodb://localhost:27017/75waydb"
 
 if (!dbConnectionString) {
   console.error("❌ MONGO_LOCALURL environment variable is missing!");

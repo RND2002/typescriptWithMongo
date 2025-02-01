@@ -9,7 +9,7 @@ export default class JWT{
    */
 
      static createToken(email: string, expiresIn: string): string | null {
-      const secret: Secret | undefined = "process.env.JWT_SECRET_KEY";
+      const secret: Secret | undefined = process.env.JWT_SECRET_KEY;
 
       if (!secret) {
         console.log("secret key cant be accessed")
@@ -27,7 +27,7 @@ export default class JWT{
    */
 
      static verifyToken(token: string): any | null {
-        const secret: Secret | undefined = "process.env.JWT_SECRET_KEY";
+        const secret: Secret | undefined = process.env.JWT_SECRET_KEY;
         if (!secret) {
           return null;
         }

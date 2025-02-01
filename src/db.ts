@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const connectDB = async (dbUrl: string) => {
   try {
-    await mongoose.connect(dbUrl); // ✅ No need for useNewUrlParser or useUnifiedTopology
+    await mongoose.connect(dbUrl); 
 
     console.log("✅ Connected to MongoDB");
 

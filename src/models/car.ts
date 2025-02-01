@@ -3,6 +3,7 @@ import mongoose,{Schema,Document,Model} from "mongoose";
 export interface ICar extends Document{
     name:string;
     modelName:string;
+    imagePath:string,
     owner:mongoose.Types.ObjectId
 }
 
@@ -13,6 +14,10 @@ const CarSchema :Schema<ICar> =new mongoose.Schema(
             required:true
         },
         modelName:{
+            type:String,
+            required:true
+        },
+        imagePath:{
             type:String,
             required:true
         },
