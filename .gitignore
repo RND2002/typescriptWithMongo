@@ -1,0 +1,33 @@
+# Node modules
+node_modules/
+dist/
+build/
+.out/
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor-specific files
+.vscode/
+.idea/
+*.iml
+
+# TypeScript files
+*.tsbuildinfo
+*.d.ts
+*.d.ts.map
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Miscellaneous
+coverage/
+temp/
