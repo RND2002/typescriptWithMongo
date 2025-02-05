@@ -1,7 +1,9 @@
-import { Request,Response } from "express";
+import { Request, Response } from "express";
 import { UserModel } from "../../models/user";
 import Password from "../../utils/password.config";
 import { validatePassword } from "../../utils/commonUtils";
+import nodemailer from "nodemailer";
+
 // import { generateFromEmail } from "unique-username-generator";
 
 /**
@@ -14,19 +16,23 @@ import { validatePassword } from "../../utils/commonUtils";
  * @returns {Response} - Returns an HTTP response with a status code, message, and success flag.
  */
 
-const signupController=async (req:Request,res:Response): Promise<Response>=>{
-    try{
-    const {firstName,lastName,email,username,password}=req.body
+const signupController = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { firstName, lastName, email, username, password,role } = req.body;
 
-     // Check if required fields are provided; return 400 Bad Request if any are missing
-     if (!firstName || !lastName || !email || !username || !password) {
-        return res.status(400).send({
-          message: "firstName, lastName, email,username and password are required!",
-          success: false,
-        });
-      }
+    // Check if required fields are provided; return 400 Bad Request if any are missing
+    if (!firstName || !lastName || !email || !username || !password) {
+      return res.status(400).send({
+        message:
+          "firstName, lastName, email,username and password are required!",
+        success: false,
+      });
+    }
 
-       // Check if an account with the provided email already exists; return 400 Bad Request if it does
+    // Check if an account with the provided email already exists; return 400 Bad Request if it does
     const existingUser = await UserModel.findOne({ email }).exec();
     if (existingUser) {
       return res.status(400).send({
@@ -35,16 +41,16 @@ const signupController=async (req:Request,res:Response): Promise<Response>=>{
         success: false,
       });
     }
-     // Validate the password; return 400 Bad Request if it doesn't meet criteria
-     const isPasswordValid = validatePassword(password);
-     if (isPasswordValid !== true) {
-       return res.status(400).send({
-         message: isPasswordValid,
-         success: false,
-       });
-     }
+    // Validate the password; return 400 Bad Request if it doesn't meet criteria
+    const isPasswordValid = validatePassword(password);
+    if (isPasswordValid !== true) {
+      return res.status(400).send({
+        message: isPasswordValid,
+        success: false,
+      });
+    }
 
-      // Hash the provided password for secure storage
+    // Hash the provided password for secure storage
     const hashedPassword = await Password.hashPassword(password);
 
     // Generate a unique username based on the email address
@@ -57,19 +63,60 @@ const signupController=async (req:Request,res:Response): Promise<Response>=>{
       email: email.toLowerCase().trim(),
       password: hashedPassword,
       username: username,
+      role:role
     });
 
-      // Return a 200 OK response with a success message
-      return res.status(200).send({
-        message: "Account created successfully",
-        success: true,
+    try {
+      await sendEmailConfirmation(email, "Thanks for being part of our team", "Account Created", "<h2>Your account is created</h2>");
+    } catch (emailError) {
+      return res.status(500).send({
+        message: "Failed to send confirmation email. Please try again.",
+        success: false,
       });
-    } catch (error) {
-      // Handle errors and return a 400 Bad Request response with the error message
-      console.error(error);
-      return res.status(400).send({ message: String(error), success: false });
     }
+    // Return a 200 OK response with a success message
+    return res.status(200).send({
+      message: "Account created successfully",
+      success: true,
+    });
+  } catch (error) {
+    // Handle errors and return a 400 Bad Request response with the error message
+    console.error(error);
+    return res.status(400).send({ message: String(error), success: false });
+  }
+};
 
-}
+const sendEmailConfirmation = async (
+  recipient: string,
+  subject: string,
+  text: string,
+  html: string
+): Promise<void> => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD, // Use an App Password instead of your Gmail password
+      },
+    });
 
-export default signupController
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL,
+      to: recipient,
+      subject: subject,
+      text: text,
+      html: html,
+    });
+
+    console.log("Email sent successfully:", info.messageId);
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw new Error("Email sending failed");
+  }
+};
+
+export default signupController;

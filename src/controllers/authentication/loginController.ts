@@ -50,7 +50,7 @@ const loginController = async (req: Request, res: Response) : Promise<Response>=
         : DEFAULT_TOKEN_EXPIRATION_SHORT;
   
       // Create a JSON Web Token (JWT) for the user
-      const token = JWT.createToken(email, tokenExpiresIn);
+      const token = JWT.createToken(email, existingUser.role);
   
       // If token creation fails, return a 500 Internal Server Error response
       if (!token) {
@@ -65,6 +65,8 @@ const loginController = async (req: Request, res: Response) : Promise<Response>=
           lastName: existingUser.lastName,
           email: existingUser.email,
           username: existingUser.username,
+          id:existingUser._id,
+          role:existingUser.role
         },
         token,
       };

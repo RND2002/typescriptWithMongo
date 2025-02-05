@@ -15,6 +15,8 @@ export interface IUser extends Document {
   createdAt: Date; // Date of user document creation
   updatedAt: Date; // Date of user document last update
   cars: (ICar | mongoose.Types.ObjectId)[];
+  role: "viewer" | "admin" | "creator"; // Define roles
+
 }
 
 /**
@@ -51,6 +53,7 @@ const UserSchema: Schema<IUser> = new mongoose.Schema(
       type: Date,
       default: Date.now, 
     },
+    role: { type: String, enum: ["viewer", "admin", "creator"], default: "viewer" },
     cars:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:"Car"

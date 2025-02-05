@@ -8,14 +8,14 @@ export default class JWT{
    * @returns {string | null} - Returns the generated JWT or null if the secret key is not available.
    */
 
-     static createToken(email: string, expiresIn: string): string | null {
+     static createToken(email: string, role: string): string | null {
       const secret: Secret | undefined = process.env.JWT_SECRET_KEY;
 
       if (!secret) {
         console.log("secret key cant be accessed")
         return null;
       }
-      return jwt.sign({ email }, secret, {
+      return jwt.sign({ email , role }, secret, {
         expiresIn:"8hr",
       });
     }
