@@ -6,7 +6,7 @@ export const readFileFromLocation = (filePath: string): string | null => {
     }
     try {
         const fileBuffer = fs.readFileSync(filePath);
-        return fileBuffer.toString('base64'); // Convert Buffer to Base64 string
+        return fileBuffer.toString('base64'); 
     } catch (error) {
         console.warn(`No file found in the path: ${filePath}`);
         return null;

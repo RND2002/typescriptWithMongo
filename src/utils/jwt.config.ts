@@ -20,6 +20,18 @@ export default class JWT{
       });
     }
 
+    static generateRefreshToken=(email:string,role:string):string|null=>{
+      const secret: Secret | undefined = process.env.JWT_SECRET_KEY;
+    
+      if (!secret) {
+              console.log("secret key cant be accessed")
+              return null;
+            }
+            return jwt.sign({ email , role }, secret, {
+              expiresIn:"8hr",
+            });
+    }
+
      /**
    * verifyToken - Verifies the validity of a JWT using the provided secret key.
    * @param {string} token - The JWT to verify.
@@ -37,5 +49,8 @@ export default class JWT{
           return null;
         }
       }
+
+
+     
 }
 

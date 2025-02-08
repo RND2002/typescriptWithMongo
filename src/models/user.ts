@@ -16,6 +16,7 @@ export interface IUser extends Document {
   updatedAt: Date; // Date of user document last update
   cars: (ICar | mongoose.Types.ObjectId)[];
   role: "viewer" | "admin" | "creator"; // Define roles
+  refreshToken:string;
 
 }
 
@@ -52,6 +53,9 @@ const UserSchema: Schema<IUser> = new mongoose.Schema(
     lastLogin: {
       type: Date,
       default: Date.now, 
+    },
+    refreshToken:{
+      type:String,
     },
     role: { type: String, enum: ["viewer", "admin", "creator"], default: "viewer" },
     cars:[{

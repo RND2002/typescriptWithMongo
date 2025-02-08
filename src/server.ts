@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-
+import { setupSwagger } from "./config/swagger.config";
 import connectDB from "./db"; 
 import expressConfig from "./config/express.config";
 
@@ -19,7 +19,7 @@ if (!dbConnectionString) {
 }
 
 expressConfig(app)
-
+setupSwagger(app);
 // ✅ Connect to the database first, then start the server
 connectDB(dbConnectionString).then(() => {
   app.listen(port, () => {
