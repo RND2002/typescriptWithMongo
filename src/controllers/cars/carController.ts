@@ -1,7 +1,7 @@
 import { Request,Response } from "express";
 import { CarModel } from "../../models/car";
 import { UserModel } from "../../models/user"; 
-
+import { redisClient } from "../../server"; 
 import fs from 'fs';
 import path from 'path';
 import {  readFileFromLocation } from "../../utils/imageToBase64";
@@ -99,7 +99,7 @@ import {  readFileFromLocation } from "../../utils/imageToBase64";
       });
     }
 
-    // Fetch all cars in a single query
+    
     const cars = await CarModel.find({ _id: { $in: carIds } }).exec();
 
     return res.status(200).json({
@@ -107,8 +107,12 @@ import {  readFileFromLocation } from "../../utils/imageToBase64";
       message: "Cars fetched successfully",
       cars,
     });
+  }
 
-  } catch (error) {
+    // Fetch all cars in a single query
+   
+
+  catch (error) {
     console.error("Error fetching cars:", error);
     return res.status(500).json({
       message: "Internal Server Error",
@@ -120,6 +124,62 @@ import {  readFileFromLocation } from "../../utils/imageToBase64";
 
 
 
+// const getCarByUserId = async (req: Request, res: Response): Promise<Response> => {
+//   try {
+//     const { userId } = req.params;
+//     console.log(userId);
+
+//     // Check if the userId is provided
+//     if (!userId || userId.length === 0) {
+//       return res.status(403).json({
+//         success: false,
+//         message: "User Id is Missing",
+//       });
+//     }
+    
+//     // Fetch cars for the given user
+//     const listOfCars = await CarModel.find({ owner: userId }).exec();
+//     if (!listOfCars || listOfCars.length === 0) {
+//       return res.status(201).json({
+//         success: false,
+//         message: "No cars found for this user",
+//       });
+//     }
+//     const newCarOnject=[]
+
+//     for(let i=0;i<listOfCars.length;i++){
+//       const  imageUrl=listOfCars[i].imagePath
+//       newCarOnject[i]={
+//         name:listOfCars[i].name,
+//         model:listOfCars[i].modelName,
+//         imageBase64:readFileFromLocation(imageUrl)
+//      }
+//      //newCarOnject[i]=newObj
+
+      
+//     }
+
+    
+
+//     //Logic to convert image to base64
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Cars fetched successfully",
+//       cars: newCarOnject,
+//     });
+
+
+  
+//   }catch(error){
+//     console.log(error)
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal Server error",
+      
+//     });
+//   }
+// };
 const getCarByUserId = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { userId } = req.params;
@@ -133,7 +193,26 @@ const getCarByUserId = async (req: Request, res: Response): Promise<Response> =>
       });
     }
 
-    // Fetch cars for the given user
+    // Check if the cars are in the Redis cache
+    try {
+      const cars = await redisClient.get(userId); // Use await to get data from Redis
+      if (cars) {
+        console.log("Getting from redis")
+        return res.status(200).json({
+          success: true,
+          message: "Cars fetched successfully from cache",
+          cars: JSON.parse(cars),
+        });
+      }
+    } catch (error) {
+      console.log('Error fetching from Redis:', error);
+      return res.status(500).json({
+        success: false,
+        message: "Error retrieving data from cache",
+      });
+    }
+
+    // If not found in cache, fetch cars from the database
     const listOfCars = await CarModel.find({ owner: userId }).exec();
     if (!listOfCars || listOfCars.length === 0) {
       return res.status(201).json({
@@ -141,38 +220,35 @@ const getCarByUserId = async (req: Request, res: Response): Promise<Response> =>
         message: "No cars found for this user",
       });
     }
-    const newCarOnject=[]
 
-    for(let i=0;i<listOfCars.length;i++){
-      const  imageUrl=listOfCars[i].imagePath
-      newCarOnject[i]={
-        name:listOfCars[i].name,
-        model:listOfCars[i].modelName,
-        imageBase64:readFileFromLocation(imageUrl)
-     }
-     //newCarOnject[i]=newObj
+    const newCarObject = [];
 
-      
+    // Iterate over the list of cars and convert image to base64
+    for (let i = 0; i < listOfCars.length; i++) {
+      const imageUrl = listOfCars[i].imagePath;
+      const imageBase64 = await readFileFromLocation(imageUrl); // Assuming this function exists and works
+
+      newCarObject.push({
+        name: listOfCars[i].name,
+        model: listOfCars[i].modelName,
+        imageBase64: imageBase64, // Convert image to base64
+      });
     }
 
-    
+    // Save the fetched data in Redis cache for future requests (expires in 1 hour)
+    await redisClient.setEx(userId, 3600, JSON.stringify(newCarObject)); // Use setEx with await
 
-    //Logic to convert image to base64
-
+    // Return the list of cars in the response
     return res.status(200).json({
       success: true,
       message: "Cars fetched successfully",
-      cars: newCarOnject,
+      cars: newCarObject,
     });
-
-
-  
-  }catch(error){
-    console.log(error)
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: "Internal Server error",
-      
     });
   }
 };
